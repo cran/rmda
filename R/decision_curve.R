@@ -131,6 +131,11 @@ decision_curve <- function(formula,
 
   #retreive outcome and check
   outcome <- data[[all.vars(formula[[2]])]];
+  #extract the model name from formula
+  predictors <- c(Reduce(paste, deparse(formula[[3]])), 'All', 'None')
+  predictor.names <- c(Reduce(paste, deparse(formula)), 'All', 'None')
+  
+  
   if(length(unique(outcome)) != 2) stop('outcome variable is not binary (it does not take two unique values).')
   stopifnot(is.numeric(outcome))
   if(min(outcome) != 0 | max(outcome) != 1) stop('outcome variable must be binary taking on values 0 for control and 1 for case.')
@@ -145,6 +150,10 @@ decision_curve <- function(formula,
     provided.risks <-  data[[Reduce(paste, deparse(formula[[3]]))]] #get the name of the fitted risk variable from formula.
     if(min(provided.risks) < 0 | max(provided.risks) > 1) stop('When fitted.risks = TRUE, all risks provided must be between 0 and 1.')
 
+  }else if(length(strsplit(predictors[[1]], "+", fixed = TRUE)[[1]])  > 1) {
+    
+    message("Note:  The data provided is used to both fit a prediction model and to estimate the respective decision curve. This may cause bias in decision curve estimates leading to over-confidence in model performance. ")
+   #print a message about potential bias due to overfitting when the same data is used to fit/evaluate a model.
   }
   #########
   ## End Checks
@@ -153,9 +162,6 @@ decision_curve <- function(formula,
   #calculate curves
   #first we fit the model
 
-  #extract the model name from formula
-  predictors <- c(Reduce(paste, deparse(formula[[3]])), 'All', 'None')
-  predictor.names <- c(Reduce(paste, deparse(formula)), 'All', 'None')
 
   #indicate whether we are fitting a model with a formula or not
   #the last two are FALSE since they correspond to 'all' and 'none'
@@ -244,7 +250,7 @@ decision_curve <- function(formula,
       alpha = 1- confidence.intervals
 
       xx <- NULL #appease check
-
+     
       #go through each measure and get the quantiles from the bootstrap distribution at each threshold
       for(rtn in names(boot.data[[1]][-1])){
         #collate the data from the measure estimates across bootstrap replicates

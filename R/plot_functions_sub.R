@@ -36,16 +36,19 @@ preparePlotData   <- function(x, curve.names, confidence.intervals){
       ci.list <- sapply(x, FUN = function(x) x$confidence.intervals)
       ci.list.log <- sapply(x, FUN = function(x) is.numeric(x$confidence.intervals))
       ci.list.num <- as.numeric(ci.list[ci.list.log])
-
-      if(length(unique(ci.list.num))!=1){warning("Confidence intervals of different sizes are being plotted on the same figure.")}
+ 
+      if(length(unique(ci.list.num))>1){warning("Confidence intervals of different sizes are being plotted on the same figure.")}
 
       confidence.intervals <- ifelse(any(ci.list.log), 1, "none")
     }else{
       confidence.intervals <- ifelse(confidence.intervals, 1, "none")
     }
 
-    message("Note: When multiple decision curves are plotted, decision curves for 'All' are calculated using the first DecisionCurve in the list provided.")
-
+    if(policy.vec[1] == "opt-in"){
+      message("Note: When multiple decision curves are plotted, decision curves for 'All' are calculated using the prevalence from the first DecisionCurve object in the list provided.")
+    }else{
+      message("Note: When multiple decision curves are plotted, decision curves for 'None' are calculated using the prevalence from the first DecisionCurve object in the list provided.")
+    }
     model <- NULL #appease check
     #multiple dc's to plot
     #pull the "all' and 'none' curves from the first element in x
@@ -163,6 +166,8 @@ plot_generic<- function(xx, predictors, value, plotNew,
         lwd = lwd[length(predictors)+ 1])
 
   if(is.numeric(confidence.intervals)){
+    if(policy == "opt-in"){
+      
     lines(xx.lower[,c("thresholds", "All")],
           col = col[length(predictors)+ 1],
           lty = lty[length(predictors)+ 1],
@@ -172,6 +177,19 @@ plot_generic<- function(xx, predictors, value, plotNew,
           col = col[length(predictors)+ 1],
           lty = lty[length(predictors)+ 1],
           lwd = lwd[length(predictors)+ 1]/2)
+    
+    
+    }else{
+      lines(xx.lower[,c("thresholds", "None")],
+            col = col[length(predictors)+ 2],
+            lty = lty[length(predictors)+ 2],
+            lwd = lwd[length(predictors)+ 2]/2)
+      
+      lines(xx.upper[,c("thresholds", "None")],
+            col = col[length(predictors)+ 2],
+            lty = lty[length(predictors)+ 2],
+            lwd = lwd[length(predictors)+ 2]/2)
+    }
 
   }
   }
